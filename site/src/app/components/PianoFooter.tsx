@@ -1,6 +1,6 @@
 "use client"
 import { useState, useRef, useEffect } from 'react';
-
+import Link from 'next/link';
 const notes = [
   { key: 'C', frequency: 261.63, label: 'C4' },
   { key: 'D', frequency: 293.66, label: 'D4' },
@@ -99,7 +99,7 @@ export const PianoFooter = () => {
               </div>
               <div className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg px-4 py-2 border border-gray-600 shadow-inner">
                 <span className="text-lg font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent tracking-wider">
-                  MIDI BOARD MAKER EVENT
+                  MINI MIDI MAGIC
                 </span>
               </div>
             </div>
@@ -224,19 +224,18 @@ export const PianoFooter = () => {
           <div className="flex items-center justify-center space-x-3 mb-3">
             <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse shadow-lg shadow-cyan-500/50"></div>
             <span className="text-sm text-gray-300 font-mono tracking-wider">
-              © 2024 MIDI BOARD MAKER EVENT
+              MINI MIDI MAGIC
             </span>
             <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-lg shadow-blue-500/50"></div>
           </div>
           <p className="text-xs text-gray-400 font-mono tracking-wide">
-            BUILD THE FUTURE OF MIDI CONTROLLERS, ONE KEY AT A TIME
+            DESIGN A MIDI CONTROLLER - GET A GRANT TO BUILD IT IRL!
           </p>
           <div className="mt-3 flex items-center justify-center space-x-6 text-xs text-gray-500">
-            <span>OPEN SOURCE</span>
+            <span>PCB and FIRMWARE by <Link href={"https://hackclub.slack.com/team/U0735FTMS3V"}>@nimit</Link></span>
             <span>•</span>
-            <span>COMMUNITY DRIVEN</span>
-            <span>•</span>
-            <span>INNOVATION FOCUSED</span>
+            <span>WEBSITE by <Link href={"https://hackclub.slack.com/team/U0807ADEC6L"}>@Manan</Link></span>
+            
           </div>
         </div>
       </div>
