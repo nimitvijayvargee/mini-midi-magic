@@ -3,13 +3,13 @@ import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 const navItems = [
-  { key: 'C', label: 'Home', href: '#', frequency: 261.63 },
-  { key: 'D', label: 'About', href: '#about', frequency: 293.66 },
-  { key: 'E', label: 'Grants', href: '#grants', frequency: 329.63 },
-  { key: 'F', label: 'Designs', href: '#designs', frequency: 349.23 },
-  { key: 'G', label: 'Community', href: '#community', frequency: 392.00 },
-  { key: 'A', label: 'Contact', href: '#contact', frequency: 440.00 },
-  { key: 'B', label: 'Register', href: '#register', frequency: 493.88 }
+  { key: 'C', frequency: 261.63 },
+  { key: 'D', frequency: 293.66 },
+  { key: 'E', frequency: 329.63 },
+  { key: 'F', frequency: 349.23 },
+  { key: 'G', frequency: 392.00 },
+  { key: 'A', frequency: 440.00 },
+  { key: 'B', frequency: 493.88 }
 ];
 
 const blackKeys = [
@@ -91,13 +91,9 @@ export const PianoNavbar = () => {
     };
   };
 
-  const handleKeyPress = (key: string, href: string, frequency: number) => {
+  const handleKeyPress = (key: string, frequency: number) => {
     setActiveKey(key);
     playNote(frequency, key);
-    if (href.startsWith('#') && href !== '#') {
-      const element = document.querySelector(href);
-      element?.scrollIntoView({ behavior: 'smooth' });
-    }
     setTimeout(() => setActiveKey(null), 150);
   };
 
@@ -176,8 +172,8 @@ export const PianoNavbar = () => {
                 {navItems.map((item, index) => (
                   <button
                     key={item.key}
-                    onClick={() => handleKeyPress(item.key, item.href, item.frequency)}
-                    onMouseDown={() => handleKeyPress(item.key, item.href, item.frequency)}
+                    onClick={() => handleKeyPress(item.key, item.frequency)}
+                    onMouseDown={() => handleKeyPress(item.key, item.frequency)}
                     className={`
                       flex-1 bg-gradient-to-b from-gray-50 via-white to-gray-100
                       border border-gray-300 rounded-b-md shadow-lg
@@ -202,9 +198,6 @@ export const PianoNavbar = () => {
                       <div className="text-xs font-bold text-gray-800 mb-1 font-mono tracking-wider">
                         {item.key}
                       </div>
-                      <div className="text-[10px] text-gray-600 uppercase tracking-wider font-semibold">
-                        {item.label}
-                      </div>
                     </div>
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/60 to-transparent opacity-80 pointer-events-none"></div>
                   </button>
@@ -218,8 +211,8 @@ export const PianoNavbar = () => {
                 {blackKeys.map((blackKey, index) => (
                   <button
                     key={blackKey.key}
-                    onClick={() => handleKeyPress(blackKey.key, '#', blackKey.frequency)}
-                    onMouseDown={() => handleKeyPress(blackKey.key, '#', blackKey.frequency)}
+                    onClick={() => handleKeyPress(blackKey.key, blackKey.frequency)}
+                    onMouseDown={() => handleKeyPress(blackKey.key, blackKey.frequency)}
                     onMouseUp={() => setActiveKey(null)}
                     onMouseLeave={() => setActiveKey(null)}
                     className={`
@@ -258,8 +251,6 @@ export const PianoNavbar = () => {
       
         <div className="h-2 bg-gradient-to-b from-gray-900 to-black shadow-inner"></div>
       </div>
-      
-
     </nav>
   );
 }

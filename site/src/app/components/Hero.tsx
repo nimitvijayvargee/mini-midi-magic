@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { Button } from "./ui/button";
+import { Lugrasimo } from 'next/font/google'
 
+const lugrasimo = Lugrasimo({
+  subsets: ['latin'],
+  weight: ['400'],
+})
 export const Hero = () => {
   return (
     <section className="min-h-screen bg-gradient-hero flex items-center justify-center relative overflow-hidden">
@@ -12,7 +17,7 @@ export const Hero = () => {
       
       <div className="container mx-auto px-4 text-center relative z-10">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-6xl md:text-8xl text-white mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text animate-glow">
+          <h1 className={`${lugrasimo.className} text-6xl md:text-8xl text-white mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text animate-glow`}>
             MINI MIDI
             <br />
             <span className="text-5xl md:text-7xl">MAGIC</span>
