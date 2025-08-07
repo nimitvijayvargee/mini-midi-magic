@@ -26,12 +26,16 @@ export const PianoFooter = () => {
   const oscillatorsRef = useRef<Map<string, OscillatorNode>>(new Map());
 
   useEffect(() => {
-    const initAudio = () => {
-      if (!audioContext) {
-        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-        setAudioContext(ctx);
-      }
-    };
+const initAudio = () => {
+  if (!audioContext) {
+    const AudioContextClass = window.AudioContext || 
+      (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (AudioContextClass) {
+      const ctx = new AudioContextClass();
+      setAudioContext(ctx);
+    }
+  }
+};
     const handleFirstInteraction = () => {
       initAudio();
       if (audioContext?.state === 'suspended') {

@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { PianoFooter } from "./components/PianoFooter";
 import { PianoNavbar } from "./components/PianoNavbar";
 import { Hero } from "./components/Hero";
