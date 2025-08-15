@@ -1,0 +1,123 @@
+body {
+  background: url(https://icons.hackclub.com/api/icons/white/rep);
+  background-size: 40px 40px;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar {
+  position: relative;
+  z-index: 10;
+  font-family: 'DynaPuff', cursive;
+}
+
+#bg-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  background: transparent;
+  pointer-events: none;
+}
+
+.center-box {
+  width: 80vw;
+  min-height: 80vh;
+  background: var(--bs-tertiary-bg);
+  border: 2px dashed var(--bs-dark-border-subtle);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 5rem auto;
+  padding: 5%;
+}
+
+.center-title {
+  text-align: center;
+  font-family: 'DynaPuff', cursive;
+}
+
+section h2 {
+  font-family: 'DynaPuff', cursive;
+  margin-bottom: 1rem;
+}
+
+section h6 {
+  font-family: 'DynaPuff', cursive;
+  margin-bottom: 0.5rem;
+}
+
+section .border {
+  background: var(--bs-tertiary-bg);
+  border: 2px dashed var(--bs-dark-border-subtle) !important;
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: border-color 0.2s ease;
+}
+
+section .border:hover {
+  border: 2px solid var(--bs-dark-border-subtle);
+}
+
+.accordion-item {
+  background-color: var(--bs-tertiary-bg);
+  border: none;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.accordion-button {
+  background-color: var(--bs-tertiary-bg);
+  color: var(--bs-body-color);
+}
+
+.accordion-button:not(.collapsed) {
+  background-color: var(--bs-dark-bg-subtle) !important;
+  color: var(--bs-body-color) !important;
+  box-shadow: none;
+}
+
+.accordion-body {
+  background-color: var(--bs-tertiary-bg);
+}
+.kit-img {
+  width: 95%;
+  border-radius: 10px;
+  margin: 2.5%;
+  border: 2px dashed var(--bs-dark-border-subtle);
+}
+/* Roadmap styling */
+.roadmap-steps {
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.roadmap .step {
+  flex: 0 0 auto;
+  width: 10vw;
+  background: var(--bs-tertiary-bg);
+  border: 2px dashed var(--bs-dark-border-subtle);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  min-width: 120px;
+  transition: border-color 0.2s ease;
+}
+
+.roadmap .step:hover {
+  border-color: var(--bs-dark-border-subtle);
+}
+
+.roadmap-arrow {
+  flex: 0 0 auto;
+  font-size: 1.5rem;
+  color: var(--bs-body-color);
+  line-height: 1;
+}
