@@ -1,6 +1,7 @@
 "use client"
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+
 const notes = [
   { key: 'C', frequency: 261.63, label: 'C4' },
   { key: 'D', frequency: 293.66, label: 'D4' },
@@ -24,58 +25,88 @@ export const PianoFooter = () => {
   const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const oscillatorsRef = useRef<Map<string, OscillatorNode>>(new Map());
+  const audioInitializedRef = useRef(false);
 
-  useEffect(() => {
-const initAudio = () => {
-  if (!audioContext) {
-    const AudioContextClass = window.AudioContext || 
-      (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (AudioContextClass) {
-      const ctx = new AudioContextClass();
-      setAudioContext(ctx);
-    }
-  }
-};
-    const handleFirstInteraction = () => {
-      initAudio();
-      if (audioContext?.state === 'suspended') {
-        audioContext.resume();
+  const initAudioContext = useCallback(() => {
+    if (audioInitializedRef.current || audioContext) return;
+    
+    try {
+      const AudioContextClass = window.AudioContext || 
+        (window as typeof window & { 
+          webkitAudioContext?: typeof AudioContext;
+          mozAudioContext?: typeof AudioContext;
+        }).webkitAudioContext || 
+        (window as typeof window & { 
+          webkitAudioContext?: typeof AudioContext;
+          mozAudioContext?: typeof AudioContext;
+        }).mozAudioContext;
+      
+      if (AudioContextClass) {
+        const ctx = new AudioContextClass();
+        setAudioContext(ctx);
+        audioInitializedRef.current = true;
+        
+        if (ctx.state === 'suspended') {
+          ctx.resume();
+        }
       }
-    };
-
-    document.addEventListener('click', handleFirstInteraction, { once: true });
-    return () => document.removeEventListener('click', handleFirstInteraction);
+    } catch (error) {
+      console.warn('Failed to initialize audio context:', error);
+    }
   }, [audioContext]);
 
-  const playNote = (frequency: number, key: string) => {
-    if (!audioContext) return;
-    const existingOsc = oscillatorsRef.current.get(key);
-    if (existingOsc) {
-      existingOsc.stop();
-      oscillatorsRef.current.delete(key);
-    }
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-    oscillator.type = 'sine';
-    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 1);
-
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 1);
-
-    oscillatorsRef.current.set(key, oscillator);
-    oscillator.onended = () => {
-      oscillatorsRef.current.delete(key);
+  useEffect(() => {
+    const handleFirstInteraction = () => {
+      initAudioContext();
     };
-  };
 
-  const handleKeyPress = (key: string, frequency: number) => {
+    const events = ['click', 'touchstart', 'keydown'];
+    events.forEach(event => {
+      document.addEventListener(event, handleFirstInteraction, { once: true });
+    });
+
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, handleFirstInteraction);
+      });
+    };
+  }, [initAudioContext]);
+
+  const playNote = useCallback((frequency: number, key: string) => {
+    if (!audioContext || audioContext.state !== 'running') return;
+    
+    try {
+      const existingOsc = oscillatorsRef.current.get(key);
+      if (existingOsc) {
+        existingOsc.stop();
+        oscillatorsRef.current.delete(key);
+      }
+      
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+      oscillator.type = 'sine';
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 1);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 1);
+
+      oscillatorsRef.current.set(key, oscillator);
+      oscillator.onended = () => {
+        oscillatorsRef.current.delete(key);
+      };
+    } catch (error) {
+      console.warn('Failed to play note:', error);
+    }
+  }, [audioContext]);
+
+  const handleKeyPress = useCallback((key: string, frequency: number) => {
     setActiveKeys(prev => new Set([...prev, key]));
     playNote(frequency, key);
     setTimeout(() => {
@@ -85,20 +116,35 @@ const initAudio = () => {
         return newSet;
       });
     }, 150);
-  };
+  }, [playNote]);
+
+  // Cleanup oscillators on unmount
+  useEffect(() => {
+    const currentOscillators = oscillatorsRef.current;
+    return () => {
+      currentOscillators.forEach(osc => {
+        try {
+          osc.stop();
+        } catch {
+          // Oscillator may already be stopped
+        }
+      });
+      currentOscillators.clear();
+    };
+  }, []);
 
   return (
-    <footer className="mt-16 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 shadow-2xl border-t-4 border-gray-700">
-
+    <footer className="mt-16 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 shadow-2xl border-t-4 border-gray-700" role="contentinfo">
       <div className="h-2 bg-gradient-to-b from-black to-gray-900 shadow-inner"></div>
+      
       <div className="bg-gradient-to-b from-gray-700 via-gray-600 to-gray-700 px-8 py-6 border-b-2 border-gray-800">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 bg-gray-800 rounded-lg px-3 py-2 border border-gray-600">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-lg shadow-blue-500/50"></div>
-                <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse shadow-lg shadow-purple-500/50" style={{ animationDelay: '0.3s' }}></div>
-                <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse shadow-lg shadow-cyan-500/50" style={{ animationDelay: '0.6s' }}></div>
+              <div className="flex items-center space-x-2 bg-gray-800 rounded-lg px-3 py-2 border border-gray-600" aria-label="Sound status indicators">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-lg shadow-blue-500/50" aria-hidden="true"></div>
+                <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse shadow-lg shadow-purple-500/50" style={{ animationDelay: '0.3s' }} aria-hidden="true"></div>
+                <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse shadow-lg shadow-cyan-500/50" style={{ animationDelay: '0.6s' }} aria-hidden="true"></div>
                 <span className="text-xs text-gray-300 font-mono ml-2">SND</span>
               </div>
               <div className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg px-4 py-2 border border-gray-600 shadow-inner">
@@ -107,13 +153,13 @@ const initAudio = () => {
                 </span>
               </div>
             </div>
-            <div className="bg-gray-800 rounded-lg px-4 py-2 border border-gray-600 min-w-[100px]">
+            <div className="bg-gray-800 rounded-lg px-4 py-2 border border-gray-600 min-w-[100px]" aria-label="Current status">
               <div className="flex items-center justify-center">
                 <span className="text-xs text-gray-400 font-mono tracking-wider">
                   {Array.from(activeKeys).length > 0 ? 'PLAYING' : 'READY'}
                 </span>
                 {Array.from(activeKeys).length > 0 && (
-                  <div className="flex space-x-1 ml-2">
+                  <div className="flex space-x-1 ml-2" aria-hidden="true">
                     {Array.from(activeKeys).slice(0, 3).map((key, index) => (
                       <div
                         key={key}
@@ -128,18 +174,21 @@ const initAudio = () => {
           </div>
         </div>
       </div>
+      
       <div className="relative px-4 py-8 bg-gradient-to-b from-gray-800 to-gray-900">
-        <div className="relative h-28 w-full max-w-7xl mx-auto">
+        <div className="relative h-28 w-full max-w-7xl mx-auto" role="application" aria-label="Virtual piano keyboard">
+          {/* White keys */}
           <div className="flex h-full gap-[1px] bg-gray-900 p-1 rounded-lg shadow-2xl">
-            {notes.map((note, index) => (
+            {notes.map((note) => (
               <button
                 key={note.key}
                 onClick={() => handleKeyPress(note.key, note.frequency)}
                 onMouseDown={() => handleKeyPress(note.key, note.frequency)}
+                aria-label={`Play note ${note.label}`}
                 className={`
                   flex-1 bg-gradient-to-b from-gray-50 via-white to-gray-100
                   border border-gray-300 rounded-b-md shadow-lg
-                  flex flex-col items-center justify-center cursor-pointer
+                  flex flex-col items-center justify-center focus:outline-none focus:ring-2 focus:ring-primary/50
                   transition-all duration-150 ease-out
                   hover:from-gray-100 hover:via-gray-50 hover:to-gray-200
                   hover:shadow-xl hover:border-gray-400
@@ -163,12 +212,14 @@ const initAudio = () => {
                     {note.label}
                   </div>
                 </div>
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/60 to-transparent opacity-80 pointer-events-none"></div>
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/60 to-transparent opacity-80 pointer-events-none" aria-hidden="true"></div>
               </button>
             ))}
           </div>
+          
+          {/* Black keys */}
           <div className="absolute top-1 h-18 w-full max-w-7xl mx-auto">
-            {blackNotes.map((note, index) => (
+            {blackNotes.map((note) => (
               <button
                 key={note.key}
                 onClick={() => handleKeyPress(note.key, note.frequency)}
@@ -187,9 +238,10 @@ const initAudio = () => {
                     return newSet;
                   });
                 }}
+                aria-label={`Play note ${note.label}`}
                 className={`
                   absolute w-12 h-18 bg-gradient-to-b from-gray-900 via-black to-gray-800
-                  border border-gray-700 rounded-b-lg shadow-2xl cursor-pointer
+                  border border-gray-700 rounded-b-lg shadow-2xl focus:outline-none focus:ring-2 focus:ring-primary/50
                   flex flex-col items-center justify-center
                   transition-all duration-100 ease-out
                   hover:from-gray-800 hover:via-gray-900 hover:to-gray-700
@@ -223,23 +275,41 @@ const initAudio = () => {
           </div>
         </div>
       </div>
+      
       <div className="bg-gradient-to-b from-gray-800 to-gray-900 px-8 py-6 border-t border-gray-700">
         <div className="max-w-7xl mx-auto text-center">
           <div className="flex items-center justify-center space-x-3 mb-3">
-            <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse shadow-lg shadow-cyan-500/50"></div>
+            <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse shadow-lg shadow-cyan-500/50" aria-hidden="true"></div>
             <span className="text-sm text-gray-300 font-mono tracking-wider">
               MINI MIDI MAGIC
             </span>
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-lg shadow-blue-500/50"></div>
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-lg shadow-blue-500/50" aria-hidden="true"></div>
           </div>
           <p className="text-xs text-gray-400 font-mono tracking-wide">
             DESIGN A MIDI CONTROLLER - GET A GRANT TO BUILD IT IRL!
           </p>
           <div className="mt-3 flex items-center justify-center space-x-6 text-xs text-gray-500">
-            <span>PCB and FIRMWARE by <Link href={"https://hackclub.slack.com/team/U0735FTMS3V"}>@nimit</Link></span>
-            <span>•</span>
-            <span>WEBSITE by <Link href={"https://hackclub.slack.com/team/U0807ADEC6L"}>@Manan</Link></span>
-            
+            <span>PCB and FIRMWARE by{' '}
+              <Link 
+                href="https://hackclub.slack.com/team/U0735FTMS3V" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-primary hover:text-primary/80 transition-colors"
+              >
+                @nimit
+              </Link>
+            </span>
+            <span aria-hidden="true">•</span>
+            <span>WEBSITE by{' '}
+              <Link 
+                href="https://hackclub.slack.com/team/U0807ADEC6L" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-primary hover:text-primary/80 transition-colors"
+              >
+                @Manan
+              </Link>
+            </span>
           </div>
         </div>
       </div>

@@ -1,7 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'summer.hackclub.com',
+        port: '',
+        pathname: '/rails/active_storage/**',
+      },
+    ],
+  },
 };
 
 export default nextConfig;
